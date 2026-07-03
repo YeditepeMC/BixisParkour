@@ -1,0 +1,26 @@
+name: BixisParkour
+version: '${project.version}'
+main: net.yeditepemc.bixisparkour.BixisParkourPlugin
+api-version: '1.21'
+author: YeditepeMC
+description: '${project.description}'
+softdepend: [DecentHolograms, BixisNavigator]
+
+commands:
+  parkour:
+    description: Parkur yönetim komutu (admin)
+    usage: /parkour
+    permission: bixisparkour.admin
+    aliases: [pk]
+  p:
+    description: Parkur oyuncu komutu
+    usage: /p
+    permission: bixisparkour.play
+
+permissions:
+  bixisparkour.admin:
+    description: Parkur yönetim yetkisi
+    default: op
+  bixisparkour.play:
+    description: Parkur oynama yetkisi
+    default: true

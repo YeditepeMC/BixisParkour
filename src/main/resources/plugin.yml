@@ -4,7 +4,7 @@ main: net.yeditepemc.bixisparkour.BixisParkourPlugin
 api-version: '1.21'
 author: YeditepeMC
 description: '${project.description}'
-softdepend: [DecentHolograms, BixisNavigator]
+softdepend: [DecentHolograms, BixisNavigator, BixisCore]
 
 commands:
   parkour:

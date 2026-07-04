@@ -1,5 +1,6 @@
 package net.yeditepemc.bixisparkour;
 
+import com.yeditepemc.bixiscore.api.BixisCoreAPI;
 import net.yeditepemc.bixisnavigator.api.NavigatorAPI;
 import net.yeditepemc.bixisparkour.command.ParkourAdminCommand;
 import net.yeditepemc.bixisparkour.command.ParkourPlayCommand;
@@ -24,6 +25,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,6 +41,11 @@ public final class BixisParkourPlugin extends JavaPlugin {
 
     /** Başlangıç plate'i spam'ini önlemek için kısa süreli cooldown (60 tick). */
     private final Set<UUID> startCooldown = new HashSet<>();
+
+    /** Bu oturumda günlük ilk-parkur bonusunu almış oyuncular (quit'te sıfırlanır). */
+    private final Set<UUID> claimedDailyParkourBonus = new HashSet<>();
+
+    private final Random random = new Random();
 
     @Override
     public void onEnable() {
@@ -145,6 +152,42 @@ public final class BixisParkourPlugin extends JavaPlugin {
         return session;
     }
 
+    /**
+     * Parkur bitirince ödül verir (submitTime/record işlendikten sonra çağrılır).
+     * Günün ilk parkuru: 150 XP + rastgele kozmetik kasası. Sonraki parkurlar:
+     * 15 XP + %25 ihtimalle kozmetik kasası (tier 1/2 rastgele).
+     */
+    public void grantFinishRewards(Player player) {
+        UUID uuid = player.getUniqueId();
+        String name = player.getName();
+
+        if (!claimedDailyParkourBonus.contains(uuid)) {
+            claimedDailyParkourBonus.add(uuid);
+            giveXP(player, 150);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gmysterybox give " + name + " 1");
+            Msg.send(player, "&6✦ &eİlk günlük parkur bonusu! &a+150 XP &6+ Kozmetik Kasası!");
+        } else {
+            giveXP(player, 15);
+            if (random.nextInt(4) == 0) {
+                int tier = random.nextBoolean() ? 1 : 2;
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gmysterybox give " + name + " 1 " + tier);
+                Msg.send(player, "&b✦ &fParkur tamamlandı! &a+15 XP &b+ Kozmetik Kasası!");
+            } else {
+                Msg.send(player, "&7✦ &fParkur tamamlandı! &a+15 XP");
+            }
+        }
+    }
+
+    /** BixisCore ServicesManager üzerinden XP ekler (BixisCore yoksa sessizce atlar). */
+    private void giveXP(Player player, long amount) {
+        RegisteredServiceProvider<BixisCoreAPI> rsp =
+                getServer().getServicesManager().getRegistration(BixisCoreAPI.class);
+        if (rsp == null) {
+            return;
+        }
+        rsp.getProvider().addXP(player, amount);
+    }
+
     /** /p leave veya BARRIER item mantığı: parkurdan çıkar ve mesaj gönderir. */
     public void leaveParkour(Player player) {
         ParkourSession session = stopParkour(player);
@@ -186,6 +229,9 @@ public final class BixisParkourPlugin extends JavaPlugin {
 
     /** Quit sırasında hafif temizlik (nav toggle yok — oyuncu çevrimdışı). */
     public void cleanupOnQuit(Player player) {
+        // Günlük bonus takibini sıfırla (oturum olsun olmasın).
+        claimedDailyParkourBonus.remove(player.getUniqueId());
+
         ParkourSession session = sessionManager.get(player.getUniqueId());
         if (session == null) {
             return;

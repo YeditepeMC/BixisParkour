@@ -111,6 +111,7 @@ public class ParkourListener implements Listener {
             if (record) {
                 Msg.prefixed(player, "&6&l✦ Yeni rekor!");
             }
+            plugin.grantFinishRewards(player);
         } else {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.2f);
             Msg.prefixed(player, "&aCheckpoint &e" + ref.index() + " &ageçildi! &7("

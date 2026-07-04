@@ -1,5 +1,5 @@
 name: BixisParkour
-version: '1.0.0'
+version: '1.1.0'
 main: net.yeditepemc.bixisparkour.BixisParkourPlugin
 api-version: '1.21'
 author: YeditepeMC

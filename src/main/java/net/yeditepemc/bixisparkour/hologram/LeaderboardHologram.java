@@ -20,7 +20,7 @@ import java.util.List;
  * <ul>
  *   <li>Marker'lar (start / checkpoint / bitiş) — ilgili plate üzerinde,
  *       komut ile otomatik oluşturulur.</li>
- *   <li>Leaderboard — {@code parkour_lb_<id>} — sadece
+ *   <li>Leaderboard — {@code bixisparkour_lb_<id>} — sadece
  *       {@code /parkour placeleaderboard} ile oyuncunun konumuna konur ve
  *       rekor kırılınca güncellenir.</li>
  * </ul>
@@ -57,19 +57,19 @@ public class LeaderboardHologram {
     // ---------------------------------------------------------------------
 
     private static String startName(String id) {
-        return "parkour_start_" + id;
+        return "bixisparkour_start_" + id;
     }
 
     private static String checkpointName(String id, int index) {
-        return "parkour_cp_" + id + "_" + index;
+        return "bixisparkour_cp_" + id + "_" + index;
     }
 
     private static String endName(String id) {
-        return "parkour_end_" + id;
+        return "bixisparkour_end_" + id;
     }
 
     private static String leaderboardName(String id) {
-        return "parkour_lb_" + id;
+        return "bixisparkour_lb_" + id;
     }
 
     // ---------------------------------------------------------------------
@@ -83,7 +83,7 @@ public class LeaderboardHologram {
         }
         List<String> lines = List.of(
                 "&6&l" + parkour.getName(),
-                "&a▶ BAŞLA!");
+                "&a▶ Parkura Başla!");
         createOrReplace(startName(parkour.getId()), markerLoc(parkour.getStart()), lines);
     }
 
@@ -106,7 +106,9 @@ public class LeaderboardHologram {
         if (end == null) {
             return;
         }
-        createOrReplace(endName(parkour.getId()), markerLoc(end), List.of("&c&l⬛ BİTİŞ"));
+        createOrReplace(endName(parkour.getId()), markerLoc(end), List.of(
+                "&6&l" + parkour.getName(),
+                "&c&l✦ BİTİŞ ✦"));
     }
 
     // ---------------------------------------------------------------------
@@ -196,7 +198,12 @@ public class LeaderboardHologram {
             if (DHAPI.getHologram(name) != null) {
                 DHAPI.removeHologram(name);
             }
-            DHAPI.createHologram(name, loc, lines);
+            // saveToFile=true → config (holograms/<name>.yml) oluşturulur ve
+            // createHologram içeride save() çağırıp diske yazar (restart'ta kalır).
+            Hologram hologram = DHAPI.createHologram(name, loc, true, lines);
+            if (hologram != null) {
+                hologram.setDefaultVisibleState(true);
+            }
         } catch (Throwable t) {
             plugin.getLogger().warning("Hologram oluşturulamadı (" + name + "): " + t.getMessage());
         }
